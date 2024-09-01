@@ -9,6 +9,8 @@ import numpy as np
 
 start_time = time.time()
 
+
+Path_Name = "/Users/santhosh/Documents/CSC project/Exoplanet/Exoplanets Trial.csv"
 weights = {
     'pl_bmasse': 0.15,              # Planet mass (Earth masses)
     'pl_insol': 0.15,               # Insolation flux received by the planet
@@ -118,10 +120,10 @@ def calculate_habitability(row, weights):
     habitability = round((min(1, max(0, habitability))) * 100,3)
     return habitability
 
-df = pd.read_csv("/Users/santhosh/Documents/CSC project/Exoplanet/Exoplanets Trial.csv")
+df = pd.read_csv(Path_Name)
 
 data_cleaned = df.head()
-data_cleaned.to_csv("/Users/santhosh/Documents/CSC project/Exoplanet/Exoplanets Trial.csv",index=False)
+data_cleaned.to_csv(Path_Name,index=False)
 try:
     for col in data_cleaned:
         if col in weights:
