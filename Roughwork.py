@@ -9,8 +9,6 @@ import numpy as np
 
 start_time = time.time()
 
-
-Path_Name = "/Users/santhosh/Documents/CSC project/Exoplanet/Exoplanets Trial.csv"
 weights = {
     'pl_bmasse': 0.15,              # Planet mass (Earth masses)
     'pl_insol': 0.15,               # Insolation flux received by the planet
@@ -112,18 +110,19 @@ def calculate_habitability(row, weights):
     # Assign weights to each feature based on its importance in determining habitability
     habitability = 0
     # Normalize each feature and multiply by its weight
-    for feature, weight in weights.items():
-        normalized_value = (row[feature] - df[feature].min()) / (df[feature].max() - df[feature].min())
-        habitability += weight * normalized_value
+    if feature.isnumeric():
+        for feature, weight in weights.items():
+            normalized_value = (row[feature] - df[feature].min()) / (df[feature].max() - df[feature].min())
+            habitability += weight * normalized_value
 
     # Ensure the habitability score is between 0 and 1
     habitability = round((min(1, max(0, habitability))) * 100,3)
     return habitability
 
-df = pd.read_csv(Path_Name)
+df = pd.read_csv(r"C:\Users\Rohan Nambiar\Documents\Vscode\Exoplanet_habitability_with_sreedharshan\Exoplanets Trial.csv")
 
 data_cleaned = df.head()
-data_cleaned.to_csv(Path_Name,index=False)
+data_cleaned.to_csv(r"C:\Users\Rohan Nambiar\Documents\Vscode\Exoplanet_habitability_with_sreedharshan\Exoplanets Trial.csv",index=False)
 try:
     for col in data_cleaned:
         if col in weights:
@@ -135,4 +134,3 @@ except Exception as e:
 
 end_time = time.time()
 print("Total Time : ",round(end_time-start_time, 2)," ms")
-
