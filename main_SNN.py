@@ -1,8 +1,7 @@
 import pandas as pd
 import numpy as np
-from keras.regularizers import l1_l2
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score, classification_report, mean_squared_error,mean_absolute_error,r2_score
+from sklearn.metrics import mean_squared_error,mean_absolute_error,r2_score
 from sklearn.model_selection import train_test_split
 from tkinter import filedialog
 from time import time
