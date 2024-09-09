@@ -2,11 +2,13 @@ import pandas as pd
 import numpy as np
 from keras.regularizers import l1_l2
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report, mean_squared_error,mean_absolute_error,r2_score
 from sklearn.model_selection import train_test_split
 from tkinter import filedialog
 from time import time
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
+import matplotlib.pyplot as plt
+
 
 start_time = time()
 
@@ -241,9 +243,52 @@ y = balanced_df['Habitability']
 # Splitting into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.2,random_state=42)
 
-RF_model = RandomForestClassifier()
+# Normalize the data
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
 
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+
+# Train the model
+rf_model.fit(X_train, y_train)
+
+y_pred = rf_model.predict(X_test)
+
+# Calculate regression metrics
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+r2 = r2_score(y_test, y_pred)
+
+print(f'Mean Squared Error: {mse}')
+print(f'Mean Absolute Error: {mae}')
+print(f'R² Score: {r2}')
+# Predict values for training and test sets
+y_train_pred = rf_model.predict(X_train)
+y_test_pred = rf_model.predict(X_test)
+
+# Plotting
+plt.figure(figsize=(14, 6))
+
+# Plot for Training Data
+plt.subplot(1, 2, 1)
+plt.scatter(y_train, y_train_pred, alpha=0.5, edgecolors='k')
+plt.plot([y_train.min(), y_train.max()], [y_train.min(), y_train.max()], 'r--', lw=2)
+plt.title('Training Data: Actual vs Predicted')
+plt.xlabel('Actual Habitability')
+plt.ylabel('Predicted Habitability')
+
+# Plot for Test Data
+plt.subplot(1, 2, 2)
+plt.scatter(y_test, y_test_pred, alpha=0.5, edgecolors='k')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
+plt.title('Test Data: Actual vs Predicted')
+plt.xlabel('Actual Habitability')
+plt.ylabel('Predicted Habitability')
+
+plt.tight_layout()
+plt.show()
 
 end_time = time()
 
-print("Runtime is : ",round*((end_time-start_time)*60,3),"ms")
+print("Runtime is : ",round((end_time-start_time),3),"ms")
