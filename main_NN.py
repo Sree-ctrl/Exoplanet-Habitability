@@ -11,6 +11,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 import joblib
+import seaborn as sns
 
 start_time = time()
 
@@ -96,10 +97,27 @@ balanced_df['Habitability'] = calculate_habitability(balanced_df, weights, earth
 final_columns = feature_columns + ['Habitability']
 balanced_df = balanced_df[final_columns]
 
+# Drop 15000 records with Habitability equal to 100
+balanced_df = balanced_df.drop(balanced_df[balanced_df['Habitability'] == 100].sample(n=15000).index)
+
+
 # Balance the data (same as before)
 balanced_df = pd.get_dummies(balanced_df, drop_first=True)
 X = balanced_df.drop(columns=['Habitability'])
 y = balanced_df['Habitability']
+
+# Downsample records with habitability of 100
+habitability_100 = balanced_df[balanced_df['Habitability'] == 100]
+habitability_non_100 = balanced_df[balanced_df['Habitability'] != 100]
+
+# Randomly sample a smaller portion of the 'Habitability == 100' records
+habitability_100_downsampled = habitability_100.sample(frac=0.1, random_state=42)  # Keep only 10%
+
+# Combine the downsampled records with the non-100 records
+balanced_df = pd.concat([habitability_100_downsampled, habitability_non_100])
+
+# Specify the file path and save the DataFrame to a CSV file
+balanced_df.to_csv('Balanced_Exoplanets.csv', index=False)
 
 # Train-test split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -114,7 +132,9 @@ model = Sequential()
 model.add(Dense(64, input_dim=X_train.shape[1], activation='relu'))  # Input layer
 model.add(Dense(32, activation='relu'))  # Hidden layer 1
 model.add(Dense(16, activation='relu'))  # Hidden layer 2
-model.add(Dense(1, activation='linear')) 
+model.add(Dense(1, activation='linear')) # Output layer 
+
+model.summary()
 
 early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
 
@@ -143,7 +163,7 @@ print(f'R² Score: {r2}')
 plt.figure(figsize=(15, 5))
 
 # Plot for Training Data
-plt.subplot(1, 3, 1)  # Change this to 1 row and 3 columns
+plt.subplot(1, 4, 1)  # Change this to 1 row and 3 columns
 plt.scatter(y_train, y_train_pred, alpha=0.5, edgecolors='k')
 plt.plot([y_train.min(), y_train.max()], [y_train.min(), y_train.max()], 'r--', lw=2)
 plt.title('Training Data: Actual vs Predicted')
@@ -151,7 +171,7 @@ plt.xlabel('Actual Habitability')
 plt.ylabel('Predicted Habitability')
 
 # Plot for Test Data
-plt.subplot(1, 3, 2)  # Adjust to the second subplot
+plt.subplot(1, 4, 2)  # Adjust to the second subplot
 plt.scatter(y_test, y_test_pred, alpha=0.5, edgecolors='k')
 plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
 plt.title('Test Data: Actual vs Predicted')
@@ -159,7 +179,7 @@ plt.xlabel('Actual Habitability')
 plt.ylabel('Predicted Habitability')
 
 # Plot for Model Loss
-plt.subplot(1, 3, 3)  # Adjust to the third subplot
+plt.subplot(1, 4, 3)  # Adjust to the third subplot
 plt.plot(history.history['loss'], label='Training Loss')
 plt.plot(history.history['val_loss'], label='Validation Loss')
 plt.title('Model Loss')
@@ -167,12 +187,19 @@ plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend()
 
+plt.subplot(1,4,4)
+sns.histplot(balanced_df['Habitability'], bins=20, kde=True)
+plt.title('Habitability Score Distribution')
+plt.xlabel('Habitability')
+plt.ylabel('Frequency')
+
 # Adjust layout and show the plots
 plt.tight_layout()
 plt.show()
 
 # Save the model
-joblib.dump(history,'NN_Model.joblib')
+model.save('NN_model.h5')
+joblib.dump(scaler,'scaler.pk1')
 
 end_time = time()
 print("Runtime is:", round((end_time - start_time), 3), "secs")
